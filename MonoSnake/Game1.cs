@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using MonoGame.Extended.TextureAtlases;
 using MonoSnake.Game;
 
@@ -14,6 +16,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private SpriteBatch _spriteBatch;
 
     public static SpriteFont fontCourier;
+    public Song background;
+   
 
     private World _world;
     public Game1()
@@ -31,10 +35,24 @@ public class Game1 : Microsoft.Xna.Framework.Game
     {
         Console.WriteLine("Going to start game");
         fontCourier = Content.Load<SpriteFont>("Courier");
+        background = Content.Load<Song>("game_music");
+      
         _world = new World(Content);
+        
+        MediaPlayer.MediaStateChanged += MediaPlayer_MediaStateChanged;
+        MediaPlayer.Play(this.background);
+         
+        MediaPlayer.IsRepeating = true;
         
         
         base.Initialize();
+    }
+    void MediaPlayer_MediaStateChanged(object sender, System.
+        EventArgs e)
+    {
+        // 0.0f is silent, 1.0f is full volume
+        MediaPlayer.Volume = 0.8f;
+          
     }
 
     protected override void LoadContent()

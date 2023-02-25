@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.TextureAtlases;
@@ -21,6 +22,8 @@ public class World
     private Position foodPosition ;
     private Position snakePosition;
     private Direction snakeDirection;
+    
+    private List<SoundEffect> soundEffects = new List<SoundEffect>();
 
     public World(ContentManager contentManager)
     {
@@ -28,6 +31,8 @@ public class World
         empty = contentManager.Load<Texture2D>("Empty");
         head = contentManager.Load<Texture2D>("Head");
         body = contentManager.Load<Texture2D>("Body");
+        soundEffects.Add(contentManager.Load<SoundEffect>("apple_bite.ogg"));
+        soundEffects.Add(contentManager.Load<SoundEffect>("qubodup-crash"));
         Reset();
     }
 
@@ -62,11 +67,13 @@ public class World
             
             if (lastPositions.Any(x => x.X == snakePosition.X && x.Y == snakePosition.Y))
             {
+                soundEffects[1].Play(0.75f, 0.0f, 0.0f);
                 gameOver = true;
             }
             
             if (snakePosition.X < 0 || snakePosition.X >= 50 || snakePosition.Y < 0 || snakePosition.Y >= 50)
             {
+                soundEffects[1].Play(0.75f, 0.0f, 0.0f);
                 gameOver = true;
             }
             
@@ -75,6 +82,7 @@ public class World
                 score += 1;
                 foodPosition = new Position(50);
                 lastPositions.Add(oldPosition);
+                soundEffects[0].Play(0.75f, 0.0f, 0.0f);
             }
             lastPositions.Add(new Position(snakePosition.X, snakePosition.Y));
             if (lastPositions.Count > 1)
