@@ -6,88 +6,102 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 using MonoGame.Extended.TextureAtlases;
 
 namespace MonoSnake.Game;
 
 public class World
 {
-    private List<Position> lastPositions = new List<Position>();
+    private List<Position> _lastPositions;
+    private List<Position> _walls;
 
-    Texture2D food;
-    Texture2D empty;
-    Texture2D body;
-    Texture2D head;
+    Texture2D _food;
+    Texture2D _empty;
+    Texture2D _body;
+    Texture2D _head;
 
-    private Position foodPosition ;
-    private Position snakePosition;
-    private Direction snakeDirection;
+    private Position _foodPosition ;
+    private Position _snakePosition;
+    private Direction _snakeDirection;
+
+    private double _elapsedTime;
+    private int _speed;
+    public int Score;
+    public bool GameOver;
+    private int _max;
     
-    private List<SoundEffect> soundEffects = new List<SoundEffect>();
+    private List<SoundEffect> _soundEffects = new List<SoundEffect>();
 
     public World(ContentManager contentManager)
     {
-        food = contentManager.Load<Texture2D>("Food");
-        empty = contentManager.Load<Texture2D>("Empty");
-        head = contentManager.Load<Texture2D>("Head");
-        body = contentManager.Load<Texture2D>("Body");
-        soundEffects.Add(contentManager.Load<SoundEffect>("apple_bite.ogg"));
-        soundEffects.Add(contentManager.Load<SoundEffect>("qubodup-crash"));
         Reset();
     }
 
+    public void LoadContent(ContentManager contentManager)
+    {
+        _food = contentManager.Load<Texture2D>("Food");
+        _empty = contentManager.Load<Texture2D>("Empty");
+        _head = contentManager.Load<Texture2D>("Head");
+        _body = contentManager.Load<Texture2D>("Body");
+        _soundEffects.Add(contentManager.Load<SoundEffect>("apple_bite.ogg"));
+        _soundEffects.Add(contentManager.Load<SoundEffect>("qubodup-crash"));
+    }
 
-    private double elapsedTime = 0;
-    private int speed;
-    public int score;
-    public bool gameOver;
+
     public void Update(GameTime gameTime)
     {
-        elapsedTime += gameTime.ElapsedGameTime.TotalMilliseconds;
+        _elapsedTime += gameTime.ElapsedGameTime.TotalMilliseconds;
 
-        if (elapsedTime > speed)
+        if (_elapsedTime > _speed)
         {
-            var oldPosition = new Position(snakePosition.X, snakePosition.Y);
-            elapsedTime = 0;
-            switch (snakeDirection)
+            var oldPosition = new Position(_snakePosition.X, _snakePosition.Y);
+            _elapsedTime = 0;
+            switch (_snakeDirection)
             {
                 case Direction.North:
-                    snakePosition.Y--;
+                    _snakePosition.Y--;
                     break;
                 case Direction.South:
-                    snakePosition.Y++;
+                    _snakePosition.Y++;
                     break;
                 case Direction.East:
-                    snakePosition.X++;
+                    _snakePosition.X++;
                     break;
                 case Direction.West:
-                    snakePosition.X--;
+                    _snakePosition.X--;
                     break;
             }
             
-            if (lastPositions.Any(x => x.X == snakePosition.X && x.Y == snakePosition.Y))
+            if (_lastPositions.Any(x => x.X == _snakePosition.X && x.Y == _snakePosition.Y))
             {
-                soundEffects[1].Play(0.75f, 0.0f, 0.0f);
-                gameOver = true;
+                _soundEffects[1].Play(0.75f, 0.0f, 0.0f);
+                GameOver = true;
             }
             
-            if (snakePosition.X < 0 || snakePosition.X >= 50 || snakePosition.Y < 0 || snakePosition.Y >= 50)
+            if (_walls.Any(x => x.X == _snakePosition.X && x.Y == _snakePosition.Y))
             {
-                soundEffects[1].Play(0.75f, 0.0f, 0.0f);
-                gameOver = true;
+                _soundEffects[1].Play(0.75f, 0.0f, 0.0f);
+                GameOver = true;
             }
             
-            if (snakePosition.X == foodPosition.X && snakePosition.Y == foodPosition.Y)
+            if (_snakePosition.X < 0 || _snakePosition.X >= 50 || _snakePosition.Y < 0 || _snakePosition.Y >= 50)
             {
-                score += 1;
-                foodPosition = new Position(50);
-                lastPositions.Add(oldPosition);
-                soundEffects[0].Play(0.75f, 0.0f, 0.0f);
+                _soundEffects[1].Play(0.75f, 0.0f, 0.0f);
+                GameOver = true;
             }
-            lastPositions.Add(new Position(snakePosition.X, snakePosition.Y));
-            if (lastPositions.Count > 1)
+            
+            if (_snakePosition.X == _foodPosition.X && _snakePosition.Y == _foodPosition.Y)
             {
-                lastPositions.RemoveAt(0);
+                Score += 1;
+                AddFood();
+                _lastPositions.Add(oldPosition);
+                _soundEffects[0].Play(0.75f, 0.0f, 0.0f);
+            }
+            _lastPositions.Add(new Position(_snakePosition.X, _snakePosition.Y));
+            if (_lastPositions.Count > 1)
+            {
+                _lastPositions.RemoveAt(0);
             }
         }
     }
@@ -97,72 +111,124 @@ public class World
         // spriteBatch.DrawString(Game1.fontCourier, $"{snakePosition} {string.Join(",",lastPositions)}"  , new Vector2(1, 20), Color.White, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
 
         
-        var height = 20;
-        for (var x = 0; x < 50; x++)
+        var height = 1000 / _max;
+        for (var x = 0; x < _max; x++)
         {
-            for (var y = 0; y < 50; y++)
+            for (var y = 0; y < _max; y++)
             {
-                spriteBatch.Draw(empty, new Rectangle(x * height, y * height, height, height), Color.White);
+                spriteBatch.Draw(_empty, new Rectangle(x * height, y * height, height, height), Color.White);
             }
         }
         
-        spriteBatch.Draw(food, new Rectangle(foodPosition.X * height, foodPosition.Y * height, height, height), Color.White);
+        spriteBatch.Draw(_food, new Rectangle(_foodPosition.X * height, _foodPosition.Y * height, height, height), Color.White);
         
         // spriteBatch.Draw(head, new Rectangle(snakePosition.X* height, snakePosition.Y * height, height, height), null,
         //     Color.White, snakeDirection.ToFloat(), new Vector2(height / 2, height / 2),
         //     SpriteEffects.None, 0);
 
-        foreach (var s in lastPositions)
+        foreach (var s in _lastPositions)
         {
-            spriteBatch.Draw(body, new Rectangle(s.X * height, s.Y * height, height, height), Color.White);
+            spriteBatch.Draw(_body, new Rectangle(s.X * height, s.Y * height, height, height), Color.White);
 
         }
 
-        spriteBatch.Draw(head, new Rectangle(snakePosition.X * height, snakePosition.Y * height, height, height), Color.White);
+        foreach (var s in _walls)
+        {
+            spriteBatch.FillRectangle(new Rectangle(s.X * height, s.Y * height, height, height), new Color(63,58,86));
+
+        }
+
+        spriteBatch.Draw(_head, new Rectangle(_snakePosition.X * height, _snakePosition.Y * height, height, height), Color.White);
 
     }
 
     public void MoveRight()
     {
-        snakeDirection = Direction.East;
+        _snakeDirection = Direction.East;
     }
 
     public void MoveLeft()
     {
-        snakeDirection = Direction.West;
+        _snakeDirection = Direction.West;
     }
 
     public void MoveUp()
     {
-        snakeDirection = Direction.North;
+        _snakeDirection = Direction.North;
     }
 
     public void MoveDown()
     {
-        snakeDirection = Direction.South;
+        _snakeDirection = Direction.South;
     }
     
     public void SpeedDown()
     {
-       speed+=10;
+       _speed+=10;
     }
     
     public void SpeedUp()
     {
-        if (speed > 10)
+        if (_speed > 10)
         {
-            speed-=10;
+            _speed-=10;
         }
     }
 
     public void Reset()
     {
-        score = 0;
-        speed = 200;
-        gameOver = false;
-        foodPosition = new Position(50);
-        snakePosition = new Position(50);
-        snakeDirection = Direction.North;
-        lastPositions = new List<Position>();
+        Score = 0;
+        _speed = 200;
+        GameOver = false;
+        _max = 50;
+        _elapsedTime = 0;
+        AddWalls();
+        AddFood();
+        AddSnake();
+    }
+
+    private void AddSnake()
+    {
+        var snakeAdded = false;
+        while(!snakeAdded)
+        {
+            var pos = new Position(_max);
+            if (!_walls.Any(x => x.X == pos.X && x.Y == pos.Y))
+            {
+                _snakePosition = pos;
+                snakeAdded = true;
+            }
+        }
+        _snakeDirection = Direction.North;
+        _lastPositions = new List<Position>();
+    }
+
+    private void AddWalls()
+    {
+        _walls = new List<Position>();
+        int i = 0;
+        while (i <= _max * 2)
+        {
+            var pos = new Position(_max);
+            if (!_walls.Any(x => x.X == pos.X && x.Y == pos.Y))
+            {
+                _walls.Add(pos);
+                i++;
+            }
+        }
+    }
+
+    private void AddFood()
+    {
+        var foodAdded = false;
+        while(!foodAdded)
+        {
+            var pos = new Position(_max);
+            if (!_walls.Any(x => x.X == pos.X && x.Y == pos.Y))
+            {
+                _foodPosition = pos;
+                foodAdded = true;
+            }
+        }
     }
 }

@@ -15,8 +15,8 @@ public class Game1 : Microsoft.Xna.Framework.Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    public static SpriteFont fontCourier;
-    public Song background;
+    private static SpriteFont _fontCourier;
+    private Song _background;
    
 
     private World _world;
@@ -34,13 +34,13 @@ public class Game1 : Microsoft.Xna.Framework.Game
     protected override void Initialize()
     {
         Console.WriteLine("Going to start game");
-        fontCourier = Content.Load<SpriteFont>("Courier");
-        background = Content.Load<Song>("game_music");
+        _fontCourier = Content.Load<SpriteFont>("Courier");
+        _background = Content.Load<Song>("game_music");
       
         _world = new World(Content);
         
         MediaPlayer.MediaStateChanged += MediaPlayer_MediaStateChanged;
-        MediaPlayer.Play(this.background);
+        MediaPlayer.Play(this._background);
          
         MediaPlayer.IsRepeating = true;
         
@@ -58,14 +58,9 @@ public class Game1 : Microsoft.Xna.Framework.Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-      
-
-        // TODO: use this.Content to load your game content here
+        _world.LoadContent(Content);
     }
     
-    private string dir;
-
-
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
@@ -102,14 +97,12 @@ public class Game1 : Microsoft.Xna.Framework.Game
             _world.SpeedUp();
         }
         
-        if (Keyboard.GetState().IsKeyDown(Keys.Space) && _world.gameOver)
+        if (Keyboard.GetState().IsKeyDown(Keys.Space) && _world.GameOver)
         {
             _world.Reset();
         }
         
         _world.Update(gameTime);
-
-        // TODO: Add your update logic here
 
         base.Update(gameTime);
     }
@@ -120,24 +113,22 @@ public class Game1 : Microsoft.Xna.Framework.Game
         GraphicsDevice.Clear(Color.Green);
         _spriteBatch.Begin();
 
-        if (!_world.gameOver)
+        if (!_world.GameOver)
         {
             _world.Draw(gameTime, _spriteBatch);
-            _spriteBatch.DrawString(fontCourier, $"Score: {_world.score}"  , new Vector2(1, 1), Color.Yellow, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
+            _spriteBatch.DrawString(_fontCourier, $"Score: {_world.Score}"  , new Vector2(1, 1), Color.Yellow, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
         
         }
         else
         {
             GraphicsDevice.Clear(Color.Red);
-            _spriteBatch.DrawString(fontCourier, $"Game over, score was: {_world.score}."  , new Vector2(250, 250), Color.White, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
-            _spriteBatch.DrawString(fontCourier, $"Press space to restart ..."  , new Vector2(250, 280), Color.White, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
+            _spriteBatch.DrawString(_fontCourier, $"Game over, score was: {_world.Score}."  , new Vector2(250, 250), Color.White, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
+            _spriteBatch.DrawString(_fontCourier, $"Press space to restart ..."  , new Vector2(250, 280), Color.White, 0, Vector2.Zero, 3, SpriteEffects.None, 0);
 
         }
         _spriteBatch.End();
-
        
         base.Draw(gameTime);
     }
-    
 
 }
